@@ -78,12 +78,12 @@ export default async function ClientPage({ params }: ClientPageProps) {
         <HubCard
           label="Strategy"
           title="Strategic direction"
-          body={client.strategy.summary}
+          body={client.strategySystem.summary}
           points={["Summary", "Positioning", "Key messages"]}
         >
-          <ContentBlock title="Strategy summary" text={client.strategy.summary} />
-          <ContentBlock title="Positioning" text={client.strategy.positioning} />
-          <ContentList title="Key messages" items={client.strategy.keyMessages} />
+          <ContentBlock title="Strategy summary" text={client.strategySystem.summary} />
+          <ContentBlock title="Positioning" text={client.strategySystem.positioning} />
+          <ContentList title="Key messages" items={client.strategySystem.keyMessages} />
         </HubCard>
 
         <HubCard

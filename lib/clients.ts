@@ -31,22 +31,29 @@ export type Deliverable = {
 export type ClientConfig = {
   slug: string;
   name: string;
+  title: string;
   shortName: string;
   description: string;
   logo: string;
+  figmaUrl: string;
+  figmaFileKey: string;
+  figmaNodeId: string;
+  accessEmails: string[];
   positioning: string;
+  strategy: string;
   brand: string;
   tone: string;
   colors: string[];
   product: string;
   designSystem: string;
+  fallback: string;
   figma: FigmaSource;
   brandSystem: {
     colors: BrandColor[];
     typography: string[];
     toneOfVoice: string[];
   };
-  strategy: {
+  strategySystem: {
     summary: string;
     positioning: string;
     keyMessages: string[];
@@ -65,16 +72,24 @@ export const clients = {
   vivolt: {
     slug: "vivolt",
     name: "Vivolt",
+    title: "Vivolt Client Hub",
     shortName: "Vivolt",
     description: "Energy transition venture support hub.",
     logo: "/clients/vivolt/logo.svg",
+    figmaUrl: "https://www.figma.com/design/FDX2dFjn1j1hGhCAVQbvXE?node-id=739-0",
+    figmaFileKey: "FDX2dFjn1j1hGhCAVQbvXE",
+    figmaNodeId: "739:0",
+    accessEmails: ["*"],
     positioning:
       "For operators and investors moving through the energy transition, Vivolt turns complex energy decisions into clear, actionable intelligence and a cleaner path to adoption.",
+    strategy:
+      "Vivolt should read as a credible energy transition platform with a clear commercial edge, measurable outcomes, and a launch story that investors and partners can repeat quickly.",
     brand: "Credible energy transition intelligence with a technical, investor-ready signal.",
     tone: "Precise, confident, proof-led, and practical.",
     colors: ["#C7F84F", "#101914", "#EAF4E2", "#2C6E93"],
     product: "Decision-support hub for energy transition strategy, proof, and launch momentum.",
     designSystem: "Data clarity, high-contrast cards, restrained signal green, and clear decision states.",
+    fallback: "Use the local Vivolt strategy, brand, and product notes when live Figma context is unavailable.",
     figma: {
       fileKey: "FDX2dFjn1j1hGhCAVQbvXE",
       nodeId: "739:0",
@@ -98,7 +113,7 @@ export const clients = {
         "Grounded in proof, adoption, and operational impact."
       ]
     },
-    strategy: {
+    strategySystem: {
       summary:
         "Vivolt should read as a credible energy transition platform with a clear commercial edge, measurable outcomes, and a launch story that investors and partners can repeat quickly.",
       positioning:
@@ -142,16 +157,24 @@ export const clients = {
   arkko: {
     slug: "arkko",
     name: "ARKKO",
+    title: "ARKKO Client Hub",
     shortName: "ARKKO",
     description: "Architecture and spatial intelligence client hub.",
     logo: "/clients/arkko/logo.svg",
+    figmaUrl: "https://www.figma.com/design/lcrX1XoRuNsUzHM6TjUbda?node-id=0-1",
+    figmaFileKey: "lcrX1XoRuNsUzHM6TjUbda",
+    figmaNodeId: "0:1",
+    accessEmails: ["*"],
     positioning:
       "For teams shaping built environments, ARKKO translates spatial complexity into clearer planning, stronger presentation, and better project decisions.",
+    strategy:
+      "ARKKO should present as a modern spatial intelligence partner: refined enough for design audiences, concrete enough for property and operations decisions.",
     brand: "Quiet architectural authority for spatial intelligence, project clarity, and commercial presentation.",
     tone: "Measured, spatially aware, editorial, and concrete.",
     colors: ["#171717", "#E8E1D4", "#B86E4B", "#315D7C"],
     product: "Spatial intelligence workspace for planning, presentation, and project decision support.",
     designSystem: "Modular plan-inspired grids, calm surfaces, tactile neutrals, and annotation-led hierarchy.",
+    fallback: "Use the local ARKKO spatial strategy, brand, and design-system notes when live Figma context is unavailable.",
     figma: {
       fileKey: "lcrX1XoRuNsUzHM6TjUbda",
       nodeId: "0:1",
@@ -175,7 +198,7 @@ export const clients = {
         "Useful to architects, developers, and operational teams."
       ]
     },
-    strategy: {
+    strategySystem: {
       summary:
         "ARKKO should present as a modern spatial intelligence partner: refined enough for design audiences, concrete enough for property and operations decisions.",
       positioning:
@@ -219,16 +242,24 @@ export const clients = {
   difrica: {
     slug: "difrica",
     name: "Difrica",
+    title: "Difrica Client Hub",
     shortName: "Difrica",
     description: "Culture, commerce, and community platform client hub.",
     logo: "/clients/difrica/logo.svg",
+    figmaUrl: "https://www.figma.com/design/VCsuWhnYxvmLh9NU3ZmfcQ?node-id=0-1",
+    figmaFileKey: "VCsuWhnYxvmLh9NU3ZmfcQ",
+    figmaNodeId: "0:1",
+    accessEmails: ["*"],
     positioning:
       "For teams building culture-led commerce, Difrica connects creators, products, stories, and markets through a mobile-first platform layer.",
+    strategy:
+      "Difrica should feel like a trusted platform for culture-led commerce: clear enough for operators, expressive enough for community, and structured enough to scale.",
     brand: "Warm culture-led commerce platform with community trust and market clarity.",
     tone: "Warm, direct, culturally aware, specific, and commercially useful.",
     colors: ["#A24E32", "#14110F", "#1F7A5C", "#F6F0E6"],
     product: "Mobile-first discovery and activation platform for creators, products, stories, and markets.",
     designSystem: "Mobile discovery cards, restrained warm accents, creator modules, product modules, and fast action paths.",
+    fallback: "Use the local Difrica culture-commerce strategy, brand, and product notes when live Figma context is unavailable.",
     figma: {
       fileKey: "VCsuWhnYxvmLh9NU3ZmfcQ",
       nodeId: "0:1",
@@ -252,7 +283,7 @@ export const clients = {
         "Specific about people, places, products, and proof."
       ]
     },
-    strategy: {
+    strategySystem: {
       summary:
         "Difrica should feel like a trusted platform for culture-led commerce: clear enough for operators, expressive enough for community, and structured enough to scale.",
       positioning:
@@ -295,21 +326,42 @@ export const clients = {
   }
 } satisfies Record<string, ClientConfig>;
 
-export const clientList = Object.values(clients);
+export const clientList: ClientConfig[] = Object.values(clients);
 
-export function getClient(slug: string) {
+export function getClient(slug: string): ClientConfig | undefined {
+  if (!Object.prototype.hasOwnProperty.call(clients, slug)) {
+    return undefined;
+  }
+
   return clients[slug as keyof typeof clients];
+}
+
+export function getClientsForEmail(email?: string | null): ClientConfig[] {
+  const normalizedEmail = email?.trim().toLowerCase();
+
+  return clientList.filter((client) => {
+    if (client.accessEmails.includes("*")) {
+      return true;
+    }
+
+    const accessEmails = client.accessEmails.map((accessEmail) => accessEmail.toLowerCase());
+    return Boolean(normalizedEmail && accessEmails.includes(normalizedEmail));
+  });
 }
 
 export function getClientAiContext(client: ClientConfig) {
   return [
     `Client: ${client.name} (${client.slug})`,
+    `Title: ${client.title}`,
     `Description: ${client.description}`,
-    `Figma file key: ${client.figma.fileKey}`,
-    `Figma node ID: ${client.figma.nodeId}`,
-    `Strategy summary: ${client.strategy.summary}`,
-    `Positioning: ${client.strategy.positioning}`,
-    `Key messages: ${client.strategy.keyMessages.join(" | ")}`,
+    `Figma URL: ${client.figmaUrl}`,
+    `Figma file key: ${client.figmaFileKey}`,
+    `Figma node ID: ${client.figmaNodeId}`,
+    `Strategy: ${client.strategy}`,
+    `Strategy summary: ${client.strategySystem.summary}`,
+    `Positioning: ${client.strategySystem.positioning}`,
+    `Key messages: ${client.strategySystem.keyMessages.join(" | ")}`,
+    `Fallback: ${client.fallback}`,
     `Brand: ${client.brand}`,
     `Tone: ${client.tone}`,
     `Colors: ${client.colors.join(" | ")}`,
