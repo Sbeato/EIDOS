@@ -4,15 +4,10 @@ import { getClient } from "@/lib/clients";
 
 export const dynamic = "force-dynamic";
 
-type FigmaRequestResult = {
+type FigmaFetchResult = {
   ok: boolean;
   status: number | null;
-  bodyMessage: string;
   body: unknown;
-};
-
-type FigmaNodeResponse = {
-  nodes?: Record<string, { document?: { name?: unknown } }>;
 };
 
 type FigmaFileResponse = {
@@ -29,38 +24,34 @@ type FigmaImagesResponse = {
   images?: Record<string, unknown>;
 };
 
-function readFigmaMessage(payload: unknown): string {
-  if (typeof payload === "string") {
-    return payload.slice(0, 500);
+function readBodyMessage(body: unknown) {
+  if (typeof body === "string") {
+    return body.slice(0, 500);
   }
 
-  if (!payload || typeof payload !== "object") {
-    return "";
+  if (!body || typeof body !== "object") {
+    return body;
   }
 
-  const record = payload as Record<string, unknown>;
+  const record = body as Record<string, unknown>;
   if (record.error && typeof record.error === "object" && "message" in record.error) {
     const nestedMessage = (record.error as { message?: unknown }).message;
     if (typeof nestedMessage === "string") {
-      return nestedMessage;
+      return { error: nestedMessage };
     }
   }
 
-  const candidates = [record.err, record.error, record.message, record.status];
-  const message = candidates.find((candidate) => typeof candidate === "string" || typeof candidate === "number");
-
-  if (typeof message === "number") {
-    return String(message);
+  const compactBody: Record<string, unknown> = {};
+  for (const key of ["err", "error", "message", "status"]) {
+    if (key in record) {
+      compactBody[key] = record[key];
+    }
   }
 
-  if (typeof message === "string") {
-    return message;
-  }
-
-  return "";
+  return Object.keys(compactBody).length > 0 ? compactBody : "OK";
 }
 
-async function requestFigma(url: string, token: string): Promise<FigmaRequestResult> {
+async function fetchFigma(url: string, token: string): Promise<FigmaFetchResult> {
   try {
     const response = await fetch(url, {
       headers: {
@@ -70,48 +61,60 @@ async function requestFigma(url: string, token: string): Promise<FigmaRequestRes
     });
     const contentType = response.headers.get("content-type") || "";
     const body = contentType.includes("application/json") ? await response.json().catch(() => null) : await response.text().catch(() => "");
-    const bodyMessage = readFigmaMessage(body) || (response.ok ? "OK" : "Figma returned no message.");
 
     return {
       ok: response.ok,
       status: response.status,
-      bodyMessage,
       body
     };
   } catch (error) {
     return {
       ok: false,
       status: null,
-      bodyMessage: error instanceof Error ? error.message : "Could not reach Figma.",
-      body: null
+      body: error instanceof Error ? error.message : "Could not reach Figma."
     };
   }
 }
 
-function getNodeName(payload: unknown, nodeId: string) {
-  const nodeResponse = payload as FigmaNodeResponse;
-  const nodeName = nodeResponse.nodes?.[nodeId]?.document?.name;
-  return typeof nodeName === "string" ? nodeName : null;
-}
-
-function getFileDetails(payload: unknown) {
-  const fileResponse = payload as FigmaFileResponse;
-  const fileName = typeof fileResponse.name === "string" ? fileResponse.name : null;
-  const topLevelPageNames =
-    fileResponse.document?.children
+function getFileDetails(body: unknown) {
+  const file = body as FigmaFileResponse;
+  const fileName = typeof file.name === "string" ? file.name : null;
+  const topLevelPages =
+    file.document?.children
       ?.filter((child) => child.type === "CANVAS" && typeof child.name === "string")
       .map((child) => child.name as string) || [];
 
   return {
     fileName,
-    topLevelPageNames
+    topLevelPages
   };
 }
 
-function getImageUrl(payload: unknown, nodeId: string) {
-  const imagesResponse = payload as FigmaImagesResponse;
-  const imageUrl = imagesResponse.images?.[nodeId];
+function getImageUrl(body: unknown, nodeId: string) {
+  const imageResponse = body as FigmaImagesResponse;
+  const imageUrl = imageResponse.images?.[nodeId];
   return typeof imageUrl === "string" ? imageUrl : null;
+}
+
+function getFileBody(result: FigmaFetchResult) {
+  if (!result.ok) {
+    return readBodyMessage(result.body);
+  }
+
+  const { fileName, topLevelPages } = getFileDetails(result.body);
+  return {
+    message: "OK",
+    fileName,
+    topLevelPages
+  };
+}
+
+function getImageBody(result: FigmaFetchResult) {
+  if (!result.ok) {
+    return readBodyMessage(result.body);
+  }
+
+  return result.body;
 }
 
 export async function GET(request: Request) {
@@ -127,78 +130,50 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unknown client slug." }, { status: 404 });
   }
 
-  const token = process.env.FIGMA_TOKEN?.trim() || "";
-  const hasFigmaToken = token.length > 0;
+  const token = process.env.FIGMA_TOKEN || "";
   const fileKey = client.figmaFileKey;
   const nodeId = client.figmaNodeId;
-  const nodeRequestUrl = `https://api.figma.com/v1/files/${fileKey}/nodes?${new URLSearchParams({ ids: nodeId }).toString()}`;
-  const fileRequestUrl = `https://api.figma.com/v1/files/${fileKey}?${new URLSearchParams({ depth: "1" }).toString()}`;
-  const imagesRequestUrl = `https://api.figma.com/v1/images/${fileKey}?${new URLSearchParams({
+  const requestUrl = `https://api.figma.com/v1/files/${fileKey}`;
+  const imageRequestUrl = `https://api.figma.com/v1/images/${fileKey}?${new URLSearchParams({
     ids: nodeId,
     format: "png"
   }).toString()}`;
 
-  const baseDebug = {
-    clientSlug: client.slug,
-    figmaFileKey: fileKey,
-    figmaNodeId: nodeId,
-    hasFigmaToken,
+  const baseResponse = {
+    client: client.slug,
+    fileKey,
+    nodeId,
+    hasFigmaToken: token.length > 0,
     figmaTokenLength: token.length,
     figmaTokenPrefix: token.slice(0, 6),
-    requestUrlUsed: nodeRequestUrl,
-    authHeaderUsed: "X-Figma-Token"
+    requestUrl,
+    headerUsed: "X-Figma-Token"
   };
 
-  if (!hasFigmaToken) {
+  if (!token) {
     return NextResponse.json({
-      ...baseDebug,
-      figmaResponseStatus: null,
-      figmaResponseBodyMessage: "Missing FIGMA_TOKEN.",
-      fileRequest: {
-        requestUrlUsed: fileRequestUrl,
-        figmaResponseStatus: null,
-        figmaResponseBodyMessage: "Missing FIGMA_TOKEN."
-      },
-      imagesRequest: {
-        requestUrlUsed: imagesRequestUrl,
-        figmaResponseStatus: null,
-        figmaResponseBodyMessage: "Missing FIGMA_TOKEN."
-      },
+      ...baseResponse,
+      figmaStatus: null,
+      figmaBody: "Missing FIGMA_TOKEN.",
       fileName: null,
-      topLevelPageNames: [],
+      topLevelPages: [],
+      imageStatus: null,
+      imageBody: "Missing FIGMA_TOKEN.",
       imageUrl: null
     });
   }
 
-  const [nodeResult, fileResult, imagesResult] = await Promise.all([
-    requestFigma(nodeRequestUrl, token),
-    requestFigma(fileRequestUrl, token),
-    requestFigma(imagesRequestUrl, token)
-  ]);
-  const fileDetails = fileResult.ok ? getFileDetails(fileResult.body) : { fileName: null, topLevelPageNames: [] };
+  const [figmaResult, imageResult] = await Promise.all([fetchFigma(requestUrl, token), fetchFigma(imageRequestUrl, token)]);
+  const fileDetails = figmaResult.ok ? getFileDetails(figmaResult.body) : { fileName: null, topLevelPages: [] };
 
   return NextResponse.json({
-    ...baseDebug,
-    figmaResponseStatus: nodeResult.status,
-    figmaResponseBodyMessage: nodeResult.bodyMessage,
-    nodeName: nodeResult.ok ? getNodeName(nodeResult.body, nodeId) : null,
-    nodeRequest: {
-      requestUrlUsed: nodeRequestUrl,
-      figmaResponseStatus: nodeResult.status,
-      figmaResponseBodyMessage: nodeResult.bodyMessage
-    },
-    fileRequest: {
-      requestUrlUsed: fileRequestUrl,
-      figmaResponseStatus: fileResult.status,
-      figmaResponseBodyMessage: fileResult.bodyMessage
-    },
-    imagesRequest: {
-      requestUrlUsed: imagesRequestUrl,
-      figmaResponseStatus: imagesResult.status,
-      figmaResponseBodyMessage: imagesResult.bodyMessage
-    },
+    ...baseResponse,
+    figmaStatus: figmaResult.status,
+    figmaBody: getFileBody(figmaResult),
     fileName: fileDetails.fileName,
-    topLevelPageNames: fileDetails.topLevelPageNames,
-    imageUrl: imagesResult.ok ? getImageUrl(imagesResult.body, nodeId) : null
+    topLevelPages: fileDetails.topLevelPages,
+    imageStatus: imageResult.status,
+    imageBody: getImageBody(imageResult),
+    imageUrl: imageResult.ok ? getImageUrl(imageResult.body, nodeId) : null
   });
 }
