@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" role="img" aria-labelledby="title">
+  <title id="title">Vivolt placeholder logo</title>
+  <rect width="320" height="120" rx="18" fill="#101914"/>
+  <path d="M46 34h30l23 54 23-54h27l-37 76H85L46 34Z" fill="#C7F84F"/>
+  <text x="158" y="76" fill="#F7F5EF" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700" letter-spacing="2">VIVOLT</text>
+</svg>

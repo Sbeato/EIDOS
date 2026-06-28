@@ -1,0 +1,9 @@
+Vivolt brand kit placeholder
+
+Replace this file with the real Vivolt brand assets when available.
+
+Suggested contents:
+- Logo package
+- Color tokens
+- Typography guidance
+- Pitch and product templates
