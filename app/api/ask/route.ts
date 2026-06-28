@@ -1,45 +1,134 @@
 import { NextResponse } from "next/server";
-import { clientContext, getClient } from "../../../lib/clients";
+import { isRequestAuthorized } from "@/lib/auth";
+import { getClient, getClientAiContext } from "@/lib/clients";
+import { getFigmaAiContext, getLiveFigmaContext } from "@/lib/figma";
+
+type AskRequest = {
+  clientSlug?: unknown;
+  question?: unknown;
+};
+
+function extractOutputText(payload: unknown): string {
+  if (!payload || typeof payload !== "object") {
+    return "";
+  }
+
+  const response = payload as {
+    output_text?: unknown;
+    output?: Array<{
+      content?: Array<{
+        type?: string;
+        text?: unknown;
+      }>;
+    }>;
+  };
+
+  if (typeof response.output_text === "string") {
+    return response.output_text.trim();
+  }
+
+  const text = response.output
+    ?.flatMap((item) => item.content || [])
+    .map((content) => (content.type === "output_text" && typeof content.text === "string" ? content.text : ""))
+    .join("")
+    .trim();
+
+  return text || "";
+}
 
 export async function POST(request: Request) {
+  if (!isRequestAuthorized(request)) {
+    return NextResponse.json({ error: "Login required." }, { status: 401 });
+  }
+
+  const body = (await request.json().catch(() => null)) as AskRequest | null;
+
+  const clientSlug = typeof body?.clientSlug === "string" ? body.clientSlug : "";
+  const question = typeof body?.question === "string" ? body.question.trim() : "";
+  const client = getClient(clientSlug);
+
+  if (!client) {
+    return NextResponse.json({ error: "Unknown client slug. Open a valid client URL such as /e/vivolt." }, { status: 404 });
+  }
+
+  if (!question) {
+    return NextResponse.json({ error: "Ask EIDOS needs a question." }, { status: 400 });
+  }
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  const model = process.env.OPENAI_MODEL;
+  const figmaToken = process.env.FIGMA_TOKEN;
+
+  const missingEnv = [
+    !apiKey ? "OPENAI_API_KEY" : null,
+    !model ? "OPENAI_MODEL" : null,
+    !figmaToken ? "FIGMA_TOKEN" : null
+  ].filter(Boolean);
+
+  if (missingEnv.length > 0) {
+    return NextResponse.json(
+      {
+        error: `Missing ${missingEnv.join(" and ")}. Create .env.local from .env.local.example and restart the dev server.`
+      },
+      { status: 500 }
+    );
+  }
+
+  let openAIResponse: Response;
+  const figmaContext = await getLiveFigmaContext(client);
+
+  if (figmaContext.status !== "ready") {
+    return NextResponse.json({ error: figmaContext.error || "Live Figma sync failed." }, { status: 502 });
+  }
+
   try {
-    const { clientSlug, question } = await request.json();
-    if (!clientSlug) return NextResponse.json({ error: "Missing clientSlug." }, { status: 400 });
-    if (!question) return NextResponse.json({ error: "Missing question." }, { status: 400 });
-
-    const client = getClient(clientSlug);
-    if (!client) return NextResponse.json({ error: "Client not found." }, { status: 404 });
-
-    const apiKey = process.env.OPENAI_API_KEY;
-    const model = process.env.OPENAI_MODEL || "gpt-5";
-    if (!apiKey) return NextResponse.json({ error: "Missing OPENAI_API_KEY in server environment." }, { status: 500 });
-    if (!model) return NextResponse.json({ error: "Missing OPENAI_MODEL in server environment." }, { status: 500 });
-
-    const system = `You are Ask EIDOS, the private client agent inside FORMA Client Hub.\nAnswer only using the selected client context.\nIf information is missing, say what is missing and propose the next practical step.\nTone: clear, sharp, premium, practical.\n\nSelected client context:\n${clientContext(client)}`;
-
-    const response = await fetch("https://api.openai.com/v1/responses", {
+    openAIResponse = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         model,
-        input: [
-          { role: "system", content: system },
-          { role: "user", content: question }
-        ]
+        instructions: [
+          "You are EIDOS FORMA, a concise strategic partner for client work.",
+          "Answer with practical recommendations, not generic advice.",
+          "Keep responses short enough for a mobile client hub.",
+          "Use the selected client configuration as your source of truth.",
+          getClientAiContext(client),
+          getFigmaAiContext(figmaContext)
+        ].join("\n"),
+        input: question,
+        max_output_tokens: 500
       })
     });
-
-    const data = await response.json();
-    if (!response.ok) {
-      return NextResponse.json({ error: data?.error?.message || "OpenAI API error." }, { status: response.status });
-    }
-
-    const answer = data.output_text || data.output?.[0]?.content?.[0]?.text || "No text answer returned.";
-    return NextResponse.json({ answer });
-  } catch (error) {
-    return NextResponse.json({ error: "Ask EIDOS server error." }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: "Could not reach OpenAI. Check your network connection and try again." },
+      { status: 502 }
+    );
   }
+
+  const payload = await openAIResponse.json().catch(() => null);
+
+  if (!openAIResponse.ok) {
+    const openAIError =
+      payload &&
+      typeof payload === "object" &&
+      "error" in payload &&
+      payload.error &&
+      typeof payload.error === "object" &&
+      "message" in payload.error &&
+      typeof payload.error.message === "string"
+        ? payload.error.message
+        : "OpenAI returned an unexpected response.";
+
+    return NextResponse.json({ error: `OpenAI error: ${openAIError}` }, { status: openAIResponse.status });
+  }
+
+  const answer = extractOutputText(payload);
+
+  return NextResponse.json({
+    answer: answer || "EIDOS received the request, but no answer text was returned."
+  });
 }

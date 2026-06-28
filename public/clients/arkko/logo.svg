@@ -1,1 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#111"/><path d="M18 16c10 8 10 24 0 32h12c10-8 10-24 0-32H18Zm28 0c-10 8-10 24 0 32H34c-10-8-10-24 0-32h12Z" fill="#F28D5C"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" role="img" aria-labelledby="title">
+  <title id="title">Arkko placeholder logo</title>
+  <rect width="320" height="120" rx="18" fill="#E8E1D4"/>
+  <path d="M46 88 84 30l38 58H99l-15-25-16 25H46Z" fill="#171717"/>
+  <path d="M102 88h52l-26-40-13 20 12 20Z" fill="#B86E4B"/>
+  <text x="168" y="76" fill="#171717" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700" letter-spacing="2">ARKKO</text>
+</svg>

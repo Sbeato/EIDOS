@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
+import { getCurrentAdminEmail } from "@/lib/auth";
 
-export default function Page() {
-  redirect("/e/vivolt");
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const adminEmail = await getCurrentAdminEmail();
+  redirect(adminEmail ? "/projects" : "/login");
 }

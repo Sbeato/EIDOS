@@ -1,0 +1,9 @@
+Difrica brand kit placeholder
+
+Replace this file with the real Difrica brand assets when available.
+
+Suggested contents:
+- Logo package
+- Culture commerce color tokens
+- Typography guidance
+- Product and campaign templates

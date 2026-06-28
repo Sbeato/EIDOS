@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
-import "./styles.css";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FORMA Client Hub",
-  description: "Private client hub for EIDOS"
+  title: "EIDOS FORMA Client Hub",
+  description: "Mobile-first EIDOS FORMA client hub MVP"
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en">
       <body>{children}</body>
