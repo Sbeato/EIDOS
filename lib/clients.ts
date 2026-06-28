@@ -34,8 +34,14 @@ export type ClientConfig = {
   shortName: string;
   description: string;
   logo: string;
+  positioning: string;
+  brand: string;
+  tone: string;
+  colors: string[];
+  product: string;
+  designSystem: string;
   figma: FigmaSource;
-  brand: {
+  brandSystem: {
     colors: BrandColor[];
     typography: string[];
     toneOfVoice: string[];
@@ -45,7 +51,7 @@ export type ClientConfig = {
     positioning: string;
     keyMessages: string[];
   };
-  product: {
+  productSystem: {
     designSystemNotes: string[];
     figmaLinks: FigmaLink[];
   };
@@ -62,12 +68,19 @@ export const clients = {
     shortName: "Vivolt",
     description: "Energy transition venture support hub.",
     logo: "/clients/vivolt/logo.svg",
+    positioning:
+      "For operators and investors moving through the energy transition, Vivolt turns complex energy decisions into clear, actionable intelligence and a cleaner path to adoption.",
+    brand: "Credible energy transition intelligence with a technical, investor-ready signal.",
+    tone: "Precise, confident, proof-led, and practical.",
+    colors: ["#C7F84F", "#101914", "#EAF4E2", "#2C6E93"],
+    product: "Decision-support hub for energy transition strategy, proof, and launch momentum.",
+    designSystem: "Data clarity, high-contrast cards, restrained signal green, and clear decision states.",
     figma: {
       fileKey: "FDX2dFjn1j1hGhCAVQbvXE",
       nodeId: "739:0",
       url: "https://www.figma.com/design/FDX2dFjn1j1hGhCAVQbvXE?node-id=739-0"
     },
-    brand: {
+    brandSystem: {
       colors: [
         { name: "Volt Green", value: "#C7F84F", usage: "Primary energy signal and highlight moments." },
         { name: "Deep Grid", value: "#101914", usage: "Core text, dark surfaces, and high-trust sections." },
@@ -96,7 +109,7 @@ export const clients = {
         "The product should prove value through speed, clarity, and measurable transition outcomes."
       ]
     },
-    product: {
+    productSystem: {
       designSystemNotes: [
         "Prioritize data clarity, high-contrast cards, and clear status states.",
         "Use green sparingly as a signal color, not a full-page wash.",
@@ -132,12 +145,19 @@ export const clients = {
     shortName: "ARKKO",
     description: "Architecture and spatial intelligence client hub.",
     logo: "/clients/arkko/logo.svg",
+    positioning:
+      "For teams shaping built environments, ARKKO translates spatial complexity into clearer planning, stronger presentation, and better project decisions.",
+    brand: "Quiet architectural authority for spatial intelligence, project clarity, and commercial presentation.",
+    tone: "Measured, spatially aware, editorial, and concrete.",
+    colors: ["#171717", "#E8E1D4", "#B86E4B", "#315D7C"],
+    product: "Spatial intelligence workspace for planning, presentation, and project decision support.",
+    designSystem: "Modular plan-inspired grids, calm surfaces, tactile neutrals, and annotation-led hierarchy.",
     figma: {
       fileKey: "lcrX1XoRuNsUzHM6TjUbda",
       nodeId: "0:1",
       url: "https://www.figma.com/design/lcrX1XoRuNsUzHM6TjUbda?node-id=0-1"
     },
-    brand: {
+    brandSystem: {
       colors: [
         { name: "Graphite", value: "#171717", usage: "Primary typography and architectural authority." },
         { name: "Limestone", value: "#E8E1D4", usage: "Warm neutral backgrounds and section surfaces." },
@@ -166,7 +186,7 @@ export const clients = {
         "Every deliverable should make a project easier to understand, approve, or sell."
       ]
     },
-    product: {
+    productSystem: {
       designSystemNotes: [
         "Use modular grids inspired by plans, sections, and annotation systems.",
         "Keep surfaces calm, tactile, and legible on mobile.",
@@ -202,12 +222,19 @@ export const clients = {
     shortName: "Difrica",
     description: "Culture, commerce, and community platform client hub.",
     logo: "/clients/difrica/logo.svg",
+    positioning:
+      "For teams building culture-led commerce, Difrica connects creators, products, stories, and markets through a mobile-first platform layer.",
+    brand: "Warm culture-led commerce platform with community trust and market clarity.",
+    tone: "Warm, direct, culturally aware, specific, and commercially useful.",
+    colors: ["#A24E32", "#14110F", "#1F7A5C", "#F6F0E6"],
+    product: "Mobile-first discovery and activation platform for creators, products, stories, and markets.",
+    designSystem: "Mobile discovery cards, restrained warm accents, creator modules, product modules, and fast action paths.",
     figma: {
       fileKey: "VCsuWhnYxvmLh9NU3ZmfcQ",
       nodeId: "0:1",
       url: "https://www.figma.com/design/VCsuWhnYxvmLh9NU3ZmfcQ?node-id=0-1"
     },
-    brand: {
+    brandSystem: {
       colors: [
         { name: "Clay", value: "#A24E32", usage: "Warm primary brand signal and campaign moments." },
         { name: "Night Market", value: "#14110F", usage: "Core text, premium contrast, and editorial surfaces." },
@@ -236,7 +263,7 @@ export const clients = {
         "The product should make people, products, and proof easy to find and act on."
       ]
     },
-    product: {
+    productSystem: {
       designSystemNotes: [
         "Prioritize mobile discovery, clear collection cards, and fast paths to action.",
         "Use warm accents with restrained neutral surfaces so content stays legible.",
@@ -283,10 +310,15 @@ export function getClientAiContext(client: ClientConfig) {
     `Strategy summary: ${client.strategy.summary}`,
     `Positioning: ${client.strategy.positioning}`,
     `Key messages: ${client.strategy.keyMessages.join(" | ")}`,
-    `Tone of voice: ${client.brand.toneOfVoice.join(" | ")}`,
-    `Typography: ${client.brand.typography.join(" | ")}`,
-    `Design system notes: ${client.product.designSystemNotes.join(" | ")}`,
-    `Figma links: ${client.product.figmaLinks.map((link) => `${link.label}: ${link.href}`).join(" | ")}`,
+    `Brand: ${client.brand}`,
+    `Tone: ${client.tone}`,
+    `Colors: ${client.colors.join(" | ")}`,
+    `Product: ${client.product}`,
+    `Design system: ${client.designSystem}`,
+    `Tone of voice: ${client.brandSystem.toneOfVoice.join(" | ")}`,
+    `Typography: ${client.brandSystem.typography.join(" | ")}`,
+    `Design system notes: ${client.productSystem.designSystemNotes.join(" | ")}`,
+    `Figma links: ${client.productSystem.figmaLinks.map((link) => `${link.label}: ${link.href}`).join(" | ")}`,
     `Latest deliverables: ${client.latestDeliverables
       .map((deliverable) => `${deliverable.title} (${deliverable.status}, ${deliverable.date})`)
       .join(" | ")}`

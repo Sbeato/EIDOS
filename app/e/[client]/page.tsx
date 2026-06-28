@@ -41,8 +41,8 @@ export default async function ClientPage({ params }: ClientPageProps) {
     notFound();
   }
 
-  const primaryColor = client.brand.colors[0]?.value || "#0B6B5B";
-  const darkColor = client.brand.colors[1]?.value || "#191815";
+  const primaryColor = client.brandSystem.colors[0]?.value || "#0B6B5B";
+  const darkColor = client.brandSystem.colors[1]?.value || "#191815";
   const clientStyle = {
     "--client-primary": primaryColor,
     "--client-dark": darkColor
@@ -96,7 +96,7 @@ export default async function ClientPage({ params }: ClientPageProps) {
             <img src={client.logo} alt={`${client.name} logo preview`} />
           </div>
           <div className="swatch-grid">
-            {client.brand.colors.map((color) => (
+            {client.brandSystem.colors.map((color) => (
               <div className="swatch" key={color.name}>
                 <span style={{ backgroundColor: color.value }} aria-hidden="true" />
                 <strong>{color.name}</strong>
@@ -105,8 +105,8 @@ export default async function ClientPage({ params }: ClientPageProps) {
               </div>
             ))}
           </div>
-          <ContentList title="Typography" items={client.brand.typography} />
-          <ContentList title="Tone of voice" items={client.brand.toneOfVoice} />
+          <ContentList title="Typography" items={client.brandSystem.typography} />
+          <ContentList title="Tone of voice" items={client.brandSystem.toneOfVoice} />
         </HubCard>
 
         <HubCard
@@ -115,8 +115,8 @@ export default async function ClientPage({ params }: ClientPageProps) {
           body="Product UI notes and Figma links for current work."
           points={["Design notes", "Figma", "Product system"]}
         >
-          <ContentList title="Design system notes" items={client.product.designSystemNotes} />
-          <LinkList title="Figma links" links={client.product.figmaLinks} />
+          <ContentList title="Design system notes" items={client.productSystem.designSystemNotes} />
+          <LinkList title="Figma links" links={client.productSystem.figmaLinks} />
           <ContentBlock title="Live node" text={`${client.figma.fileKey} / ${client.figma.nodeId}`} />
         </HubCard>
 
