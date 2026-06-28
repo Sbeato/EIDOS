@@ -55,9 +55,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Ask EIDOS needs a question." }, { status: 400 });
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  const model = process.env.OPENAI_MODEL;
-  const figmaToken = process.env.FIGMA_TOKEN;
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  const model = process.env.OPENAI_MODEL?.trim();
+  const figmaToken = process.env.FIGMA_TOKEN?.trim();
 
   const missingEnv = [
     !apiKey ? "OPENAI_API_KEY" : null,

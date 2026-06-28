@@ -86,7 +86,7 @@ export async function getLiveFigmaContext(client: ClientConfig): Promise<FigmaCo
     colors: []
   };
 
-  const token = process.env.FIGMA_TOKEN;
+  const token = process.env.FIGMA_TOKEN?.trim();
   if (!token) {
     return {
       ...baseContext,
