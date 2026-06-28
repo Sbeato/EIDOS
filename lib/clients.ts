@@ -53,6 +53,8 @@ export type ClientConfig = {
   latestDeliverables: Deliverable[];
 };
 
+export type ClientHub = ClientConfig;
+
 export const clients = {
   vivolt: {
     slug: "vivolt",
