@@ -1,9 +1,0 @@
-Arkko brand kit placeholder
-
-Replace this file with the real Arkko brand assets when available.
-
-Suggested contents:
-- Logo package
-- Architectural grid and spacing notes
-- Color tokens
-- Proposal and case-study templates

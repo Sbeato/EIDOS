@@ -1,9 +1,0 @@
-Pangea brand kit placeholder
-
-Replace this file with the real Pangea brand assets when available.
-
-Suggested contents:
-- Logo package
-- Global color and market tokens
-- Typography guidance
-- Platform and pitch templates
