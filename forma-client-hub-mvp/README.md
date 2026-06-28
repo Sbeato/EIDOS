@@ -44,3 +44,4 @@ NEXT_PUBLIC_HUB_PASSCODE=eidos
 ## Notes
 
 This is intentionally not a full platform. It is an MVP: one private space, one agent, zero friction.
+Deploy trigger
